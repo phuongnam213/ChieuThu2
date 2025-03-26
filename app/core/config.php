@@ -2,9 +2,8 @@
 
 if($_SERVER['SERVER_NAME'] == "localhost")
 {
-
 	//for local server
-	define("ROOT", "http://localhost/music_website/public");
+	define("ROOT", "http://localhost:8080/chieuthu2/public");
 
 	define("DBDRIVER", "mysql");
 	define("DBHOST", "localhost");
