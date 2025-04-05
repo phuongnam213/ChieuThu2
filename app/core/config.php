@@ -14,7 +14,7 @@ if ($port != 80) {
 // Kiểm tra nếu tên miền là localhost
 if (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false) {
     // Cấu hình cho local server
-    $rootUrl .= "/chieuthu2-dev/public";  // Đường dẫn tới thư mục public của bạn
+    $rootUrl .= "/chieuthu2/public";  // Đường dẫn tới thư mục public của bạn
     define("ROOT", $rootUrl);  // Định nghĩa ROOT
 
     // Cấu hình cơ sở dữ liệu
