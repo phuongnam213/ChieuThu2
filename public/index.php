@@ -1,4 +1,4 @@
-<?php 
+<?php
 session_start();
 
 require "../app/core/init.php";
@@ -6,16 +6,16 @@ require "../app/core/init.php";
 $URL = $_GET['url'] ?? "home";
 $URL = explode("/", $URL);
 
-//get page number
-$page = $_GET['page'] ?? 1;
-$page = (int)$page;
-$prev_page = $page <= 1 ? 1 : $page - 1;
-$next_page = $page + 1;
+// Xác định trang
+if ($URL[0] == "admin" && isset($URL[1])) {
+    $file = page("admin/" . $URL[1]);  // Gọi page() với "admin/balance"
+} else {
+    $file = page(strtolower($URL[0]));
+}
 
-$file = page(strtolower($URL[0]));
-if(file_exists($file))
-{
-	require $file;
-}else{
-	require page("404");
+// Kiểm tra và yêu cầu file
+if (file_exists($file)) {
+    require $file;
+} else {
+    require page("404"); // Trang 404 tùy chỉnh của bạn
 }

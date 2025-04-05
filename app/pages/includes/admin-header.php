@@ -104,6 +104,7 @@
                 <div class="nav-item"><a href="<?=ROOT?>/admin/songs"><i class="fas fa-music"></i> Songs</a></div>
                 <div class="nav-item"><a href="<?=ROOT?>/admin/categories"><i class="fas fa-list"></i> Categories</a></div>
                 <div class="nav-item"><a href="<?=ROOT?>/admin/artists"><i class="fas fa-microphone"></i> Artists</a></div>
+                <div class="nav-item"><a href="<?=ROOT?>/admin/balance"><i class="fas fa-wallet"></i> Quản lý số dư</a></div>
                 <div class="nav-item dropdown">
                     <a href="#"><i class="fas fa-user-circle"></i> <?=user('username')?></a>
                     <div class="dropdown-list">

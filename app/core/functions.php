@@ -8,10 +8,14 @@ function show($stuff)
 	echo "</pre>";
 }
 
-function page($file)
-{
-
-	return "../app/pages/".$file.".php";
+function page($page) {
+    // Kiểm tra xem có phải là trang admin không
+    $page = strtolower($page);
+    if(strpos($page, "admin") === 0) {
+        return "../app/pages/".$page.".php";
+    } else {
+        return "../app/pages/".$page.".php";
+    }
 }
 
 function db_connect()
@@ -22,44 +26,61 @@ function db_connect()
 	return $con;
 }
 
-function db_query($query, $data = array())
-{
-	$con = db_connect();
-
-	$stm = $con->prepare($query);
-	if($stm)
-	{
-		$check = $stm->execute($data);
-		if($check){
-			$result = $stm->fetchAll(PDO::FETCH_ASSOC);
-
-			if(is_array($result) && count($result) > 0)
-			{
-				return $result;
-			}
-		}
-	}
-	return false;
+/**
+ * Thực hiện truy vấn và trả về một dòng kết quả
+ * 
+ * @param string $query Câu truy vấn SQL
+ * @param array $params Các tham số cho truy vấn
+ * @param PDO $conn Kết nối cơ sở dữ liệu (tùy chọn)
+ * @return array|false Mảng kết quả hoặc false nếu có lỗi
+ */
+function db_query_one($query, $params = [], $conn = null) {
+    if ($conn === null) {
+        global $conn; // Sử dụng kết nối toàn cục nếu không được truyền vào
+    }
+    
+    try {
+        $stmt = $conn->prepare($query);
+        $stmt->execute($params);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ? $result : false;
+    } catch (PDOException $e) {
+        error_log("Lỗi db_query_one: " . $e->getMessage());
+        return false;
+    }
 }
 
-function db_query_one($query, $data = array())
-{
-	$con = db_connect();
-
-	$stm = $con->prepare($query);
-	if($stm)
-	{
-		$check = $stm->execute($data);
-		if($check){
-			$result = $stm->fetchAll(PDO::FETCH_ASSOC);
-
-			if(is_array($result) && count($result) > 0)
-			{
-				return $result[0];
-			}
-		}
-	}
-	return false;
+/**
+ * Thực hiện truy vấn và trả về tất cả các dòng kết quả
+ * 
+ * @param string $query Câu truy vấn SQL
+ * @param array $params Các tham số cho truy vấn
+ * @param PDO $conn Kết nối cơ sở dữ liệu (tùy chọn)
+ * @return array|false Mảng kết quả hoặc false nếu có lỗi
+ */
+function db_query($query, $params = [], $conn = null) {
+    if ($conn === null) {
+        global $conn; // Sử dụng kết nối toàn cục nếu không được truyền vào
+    }
+    
+    try {
+        $stmt = $conn->prepare($query);
+        $stmt->execute($params);
+        
+        // Nếu là câu lệnh INSERT, UPDATE, DELETE, trả về số dòng bị ảnh hưởng
+        if (strpos(strtoupper($query), "INSERT") === 0 || 
+            strpos(strtoupper($query), "UPDATE") === 0 || 
+            strpos(strtoupper($query), "DELETE") === 0) {
+            return $stmt->rowCount();
+        }
+        
+        // Nếu là câu lệnh SELECT, trả về kết quả
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $result ? $result : false;
+    } catch (PDOException $e) {
+        error_log("Lỗi db_query: " . $e->getMessage());
+        return false;
+    }
 }
 
 function message($message = '', $clear = false)
@@ -199,3 +220,74 @@ function get_artist($id)
 	return "Unknown";
 }
 
+/**
+ * Lấy số dư tài khoản của người dùng
+ * 
+ * @param int $user_id ID của người dùng
+ * @param PDO $conn Kết nối cơ sở dữ liệu (tùy chọn)
+ * @return float Số dư tài khoản
+ */
+function getUserBalance($user_id, $conn = null) {
+    if ($conn === null) {
+        global $conn; // Sử dụng kết nối toàn cục nếu không được truyền vào
+    }
+    
+    $query = "SELECT balance FROM users WHERE id = :id LIMIT 1";
+    $row = db_query_one($query, ['id' => $user_id], $conn);
+    
+    if ($row && isset($row['balance'])) {
+        return (float)$row['balance'];
+    }
+    
+    return 0.00;
+}
+
+/**
+ * Cập nhật số dư tài khoản của người dùng
+ * 
+ * @param int $user_id ID của người dùng
+ * @param float $amount Số tiền cần cập nhật (dương: nạp tiền, âm: trừ tiền)
+ * @param PDO $conn Kết nối cơ sở dữ liệu (tùy chọn)
+ * @return bool Trạng thái cập nhật
+ */
+function updateUserBalance($user_id, $amount, $conn = null) {
+    if ($conn === null) {
+        global $conn; // Sử dụng kết nối toàn cục nếu không được truyền vào
+    }
+    
+    $query = "UPDATE users SET balance = balance + :amount WHERE id = :id LIMIT 1";
+    return db_query($query, ['amount' => $amount, 'id' => $user_id], $conn);
+}
+
+/**
+ * Kiểm tra xem người dùng có đủ số dư để tải nhạc không
+ * 
+ * @param int $user_id ID của người dùng
+ * @param float $required_amount Số tiền cần thiết
+ * @param PDO $conn Kết nối cơ sở dữ liệu (tùy chọn)
+ * @return bool True nếu đủ số dư, ngược lại là False
+ */
+function hasEnoughBalance($user_id, $required_amount, $conn = null) {
+    if ($conn === null) {
+        global $conn; // Sử dụng kết nối toàn cục nếu không được truyền vào
+    }
+    
+    $balance = getUserBalance($user_id, $conn);
+    return $balance >= $required_amount;
+}
+
+/**
+ * Trừ tiền khi người dùng tải nhạc
+ * 
+ * @param int $user_id ID của người dùng
+ * @param float $amount Số tiền cần trừ
+ * @param PDO $conn Kết nối cơ sở dữ liệu (tùy chọn)
+ * @return bool Trạng thái trừ tiền
+ */
+function deductBalance($user_id, $amount, $conn = null) {
+    if ($conn === null) {
+        global $conn; // Sử dụng kết nối toàn cục nếu không được truyền vào
+    }
+    
+    return updateUserBalance($user_id, -$amount, $conn);
+}

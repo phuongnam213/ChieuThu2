@@ -155,10 +155,60 @@
         text-align: center;
         margin-top: 20px;
     }
-
+    
+    /* Thêm style cho thông báo lỗi tải nhạc */
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .alert-danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+    }
+    
+    /* Style cho nút tải nhạc */
+    .download-btn {
+        display: inline-block;
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 500;
+        margin-top: 15px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .download-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .download-btn i {
+        margin-right: 8px;
+    }
 </style>
 
 <center><div class="section-title">Now Playing</div></center>
+
+<!-- Thêm thông báo lỗi tải nhạc nếu có -->
+<?php if (isset($_SESSION['download_error'])): ?>
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle"></i> 
+        <?php 
+            echo $_SESSION['download_error']; 
+            unset($_SESSION['download_error']); 
+        ?>
+    </div>
+<?php endif; ?>
 
 <section class="content">
     
@@ -166,7 +216,24 @@
      
         <div class="song-container">
             <?php include page('song-full') ?>
-        </div>
+            
+            <!-- Thêm nút tải nhạc với giá tiền -->
+            <?php if(logged_in()): ?>
+    <?php if(is_admin()): ?>
+        <a href="<?=ROOT?>/download/<?=$row['slug']?>" class="download-btn">
+            <i class="fas fa-download"></i> Tải nhạc (Miễn phí - Admin)
+        </a>
+    <?php else: ?>
+        <a href="<?=ROOT?>/download/<?=$row['slug']?>" class="download-btn">
+            <i class="fas fa-download"></i> Tải nhạc (1.000 đồng)
+        </a>
+        <p class="mt-2 text-muted">
+            <small>Số dư hiện tại: <?=number_format(getUserBalance(user('id')), 0, ',', '.')?> đồng</small>
+        </p>
+    <?php endif; ?>
+<?php else: ?>
+    <div class="error-message">Bạn cần đăng nhập để tải nhạc. <a href="<?=ROOT?>/login">Đăng nhập</a></div>
+<?php endif; ?>
 
         <?php if (logged_in()): ?>
         
@@ -180,7 +247,7 @@
                 
             </div>
         <?php else: ?>
-            <div class="error-message">You must be logged in to comment. <a href="http://localhost/music_website/public/login">Login here</a></div>
+            <div class="error-message">You must be logged in to comment. <a href="<?=ROOT?>/login">Login here</a></div>
         <?php endif; ?>
 
         
