@@ -71,3 +71,4 @@ if(file_exists($file_path)) {
 // Nếu có lỗi khác, hiển thị thông báo
 message("Không thể tải bài hát. Vui lòng thử lại sau.");
 redirect('song/' . $slug);
+?>

@@ -399,142 +399,51 @@ if($_SERVER['REQUEST_METHOD'] == "POST")
         </div>
         
         <div class="profile-main">
-            <!-- THÊM PHẦN NÀY: Hiển thị số dư và form nạp tiền -->
-            <div class="profile-card">
-    <div class="profile-card-header">
-        <h3><i class="fas fa-wallet"></i> Số dư tài khoản</h3>
-    </div>
-    
-    <div class="profile-card-body">
-        <div class="user-info-item">
-            <div class="user-info-icon">
-                <i class="fas fa-coins"></i>
-            </div>
-            <div class="user-info-text">
-                <div class="user-info-label">Số dư hiện tại</div>
-                <div class="user-info-value"><?=number_format(getUserBalance($user_id), 0, ',', '.')?> đồng</div>
-            </div>
-        </div>
-        
-        <p style="margin: 15px 0; color: #666;">
-            <i class="fas fa-info-circle"></i> 
-            <?php if(is_admin()): ?>
-                Bạn là admin, có thể tải nhạc mà không cần trả phí.
-            <?php else: ?>
-                Mỗi bài hát có giá 1.000 đồng. Nạp tiền để tải nhạc về máy.
-            <?php endif; ?>
-        </p>
-        
-        <form action="<?=ROOT?>/deposit" method="post" class="profile-form">
-            <div class="input-group">
-                <label for="amount">Số tiền muốn nạp (đồng):</label>
-                <input type="number" id="amount" name="amount" class="form-control" min="10000" step="10000" value="10000">
-            </div>
-            
-            <button type="submit" class="profile-submit-btn">
-                <i class="fas fa-plus-circle"></i> Nạp tiền
-            </button>
-        </form>
-    </div>
-</div>
-            <!-- KẾT THÚC PHẦN THÊM MỚI -->
-            
+            <!-- Hiển thị thông báo về số dư không đủ -->
+            <p style="margin: 15px 0; color: red;">
+                <?php if(!hasEnoughBalance($user_id, 1000)): ?>
+                    <i class="fas fa-exclamation-circle"></i> Số dư không đủ để tải nhạc. Vui lòng nạp thêm tiền.
+                <?php endif; ?>
+            </p>
+
+            <!-- Phần số dư tài khoản -->
             <div class="profile-card">
                 <div class="profile-card-header">
-                    <h3><i class="fas fa-lock"></i> Đổi mật khẩu</h3>
+                    <h3><i class="fas fa-wallet"></i> Số dư tài khoản</h3>
                 </div>
                 
                 <div class="profile-card-body">
-                    <?php if(message()): ?>
-                        <div class="success-alert">
-                            <i class="fas fa-check-circle"></i> <?=message('', true)?>
+                    <div class="user-info-item">
+                        <div class="user-info-icon">
+                            <i class="fas fa-coins"></i>
                         </div>
-                    <?php endif; ?>
-
-                    <form method="post" class="profile-form">
+                        <div class="user-info-text">
+                            <div class="user-info-label">Số dư hiện tại</div>
+                            <div class="user-info-value"><?=number_format(getUserBalance($user_id), 0, ',', '.')?> đồng</div>
+                        </div>
+                    </div>
+                    
+                    <p style="margin: 15px 0; color: #666;">
+                        <i class="fas fa-info-circle"></i> 
+                        <?php if(is_admin()): ?>
+                            Bạn là admin, có thể tải nhạc mà không cần trả phí.
+                        <?php else: ?>
+                            Mỗi bài hát có giá 1.000 đồng. Nạp tiền để tải nhạc về máy.
+                        <?php endif; ?>
+                    </p>
+                    
+                    <form action="<?=ROOT?>/deposit" method="post" class="profile-form">
                         <div class="input-group">
-                            <label for="username">Tên người dùng <span class="info-badge">Chỉ xem</span></label>
-                            <input type="text" id="username" class="form-control form-control-readonly" value="<?=esc($row['username'])?>" readonly>
+                            <label for="amount">Số tiền muốn nạp (đồng):</label>
+                            <input type="number" id="amount" name="amount" class="form-control" min="10000" step="10000" value="10000">
                         </div>
-
-                        <div class="input-group">
-                            <label for="email">Email <span class="info-badge">Chỉ xem</span></label>
-                            <input type="email" id="email" class="form-control form-control-readonly" value="<?=esc($row['email'])?>" readonly>
-                        </div>
-
-                        <div class="input-group">
-                            <label for="password">Mật khẩu mới</label>
-                            <input type="password" id="password" name="password" class="form-control" placeholder="Nhập mật khẩu mới nếu muốn thay đổi">
-                            <?php if(!empty($errors['password'])): ?>
-                                <small class="error"><i class="fas fa-exclamation-circle"></i> <?=$errors['password']?></small>
-                            <?php endif; ?>
-                        </div>
-
-                        <div class="input-group">
-                            <label for="retype_password">Nhập lại mật khẩu mới</label>
-                            <input type="password" id="retype_password" name="retype_password" class="form-control" placeholder="Nhập lại mật khẩu mới">
-                        </div>
-
+                        
                         <button type="submit" class="profile-submit-btn">
-                            <i class="fas fa-save"></i> Cập nhật mật khẩu
+                            <i class="fas fa-plus-circle"></i> Nạp tiền
                         </button>
                     </form>
                 </div>
             </div>
-            
-            <div class="profile-card">
-                <div class="profile-card-header">
-                    <h3><i class="fas fa-info-circle"></i> Thông tin tài khoản</h3>
-                </div>
-                
-                <div class="profile-card-body">
-                    <div class="user-info-item">
-                        <div class="user-info-icon">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="user-info-text">
-                            <div class="user-info-label">Tên người dùng</div>
-                            <div class="user-info-value"><?=esc($row['username'])?></div>
-                        </div>
-                    </div>
-                    
-                    <div class="user-info-item">
-                        <div class="user-info-icon">
-                            <i class="fas fa-envelope"></i>
-                        </div>
-                        <div class="user-info-text">
-                            <div class="user-info-label">Email</div>
-                            <div class="user-info-value"><?=esc($row['email'])?></div>
-                        </div>
-                    </div>
-                    
-                    <div class="user-info-item">
-                        <div class="user-info-icon">
-                            <i class="fas fa-user-tag"></i>
-                        </div>
-                        <div class="user-info-text">
-                            <div class="user-info-label">Vai trò</div>
-                            <div class="user-info-value"><?=ucfirst($row['role'])?></div>
-                        </div>
-                    </div>
-                    
-                    <div class="user-info-item">
-                        <div class="user-info-icon">
-                            <i class="fas fa-calendar-alt"></i>
-                        </div>
-                        <div class="user-info-text">
-                            <div class="user-info-label">Ngày tham gia</div>
-                            <div class="user-info-value"><?=get_date($row['date'])?></div>
-                        </div>
-                    </div>
-                    
-                    <p style="margin-top: 20px; color: #666; font-size: 14px;">
-                        <i class="fas fa-info-circle"></i> Nếu bạn muốn thay đổi tên người dùng hoặc email, vui lòng liên hệ với quản trị viên.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
+            
 <?php require page('includes/footer')?>
