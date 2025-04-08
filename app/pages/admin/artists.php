@@ -1,6 +1,5 @@
 <?php 
-
-
+$action = isset($_GET['action']) ? $_GET['action'] : 'default';
 	if($action == 'add')
 	{
 
