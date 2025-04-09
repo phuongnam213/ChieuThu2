@@ -1,6 +1,17 @@
 <?php 
+// Extract action, ID and page from URL
+$url_path = $_SERVER['REQUEST_URI'];
+$path_parts = explode('/', trim(parse_url($url_path, PHP_URL_PATH), '/'));
+
+// Find the position of 'songs' in the URL
+$songs_pos = array_search('songs', $path_parts);
+
+// Extract action and ID from URL
+$action = isset($path_parts[$songs_pos + 1]) ? $path_parts[$songs_pos + 1] : 'default';
+$id = isset($path_parts[$songs_pos + 2]) ? $path_parts[$songs_pos + 2] : null;
+
+// Get page parameter from query string for pagination
 $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
-$action = isset($_GET['action']) ? $_GET['action'] : 'default';
 
 if ($action == 'add') {
     if ($_SERVER['REQUEST_METHOD'] == "POST") {
@@ -219,6 +230,7 @@ if ($action == 'add') {
 
     $query = "SELECT * FROM songs ORDER BY id DESC LIMIT $limit OFFSET $offset";
     $rows = db_query($query);
+}
 ?>
 
 <?php require page('includes/admin-header')?>
@@ -442,4 +454,3 @@ if ($action == 'add') {
 </section>
 
 <?php require page('includes/admin-footer')?>
-<?php } ?>

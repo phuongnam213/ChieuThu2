@@ -1,320 +1,305 @@
-<?php 
-$action = isset($_GET['action']) ? $_GET['action'] : 'default';
-	if($action == 'add')
-	{
+<?php
+// Extract action and ID from URL path
+$url_path = $_SERVER['REQUEST_URI'];
+$path_parts = explode('/', trim(parse_url($url_path, PHP_URL_PATH), '/'));
 
-		if($_SERVER['REQUEST_METHOD'] == "POST")
-		{
+// Find the position of 'artists' in the URL
+$artists_pos = array_search('artists', $path_parts);
 
-			$errors = [];
+// Extract action and ID from URL
+$action = isset($path_parts[$artists_pos + 1]) ? $path_parts[$artists_pos + 1] : 'default';
+$id = isset($path_parts[$artists_pos + 2]) ? $path_parts[$artists_pos + 2] : null;
+if ($action == 'add') {
 
-			//data validation
-			if(empty($_POST['name']))
-			{
-				$errors['name'] = "a name is required";
-			}else
-			if(!preg_match("/^[a-zA-Z \&\-]+$/", $_POST['name'])){
-				$errors['name'] = "a name can only have letters & spaces";
-			}
+	if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
-			//image
-			if(!empty($_FILES['image']['name']))
-			{
+		$errors = [];
 
-				$folder = "uploads/";
-				if(!file_exists($folder))
-				{
-					mkdir($folder,0777,true);
-					file_put_contents($folder."index.php", "");
-				}
-
-				$allowed = ['image/jpeg','image/png'];
-				if($_FILES['image']['error'] == 0 && in_array($_FILES['image']['type'], $allowed))
-				{
-					
-					$destination = $folder. $_FILES['image']['name'];
-
-					move_uploaded_file($_FILES['image']['tmp_name'], $destination);
-
-				}else{
-					$errors['name'] = "image no valid. allowed types are ". implode(",", $allowed);
-				}
-				
-
-			}else{
-				$errors['name'] = "an image is required";
-			}
- 
-			if(empty($errors))
-			{
-
-				$values = [];
-				$values['name'] = trim($_POST['name']);
-				$values['bio'] = trim($_POST['bio']);
-				$values['image'] 	= $destination;
-				$values['user_id'] 	= user('id');
-
-				$query = "insert into artists (name,image,user_id,bio) values (:name,:image,:user_id,:bio)";
-				db_query($query,$values);
-
-				message("artist created successfully");
-				redirect('admin/artists');
-			}
+		//data validation
+		if (empty($_POST['name'])) {
+			$errors['name'] = "a name is required";
+		} else
+			if (!preg_match("/^[a-zA-Z \&\-]+$/", $_POST['name'])) {
+			$errors['name'] = "a name can only have letters & spaces";
 		}
-	}else
-	if($action == 'edit')
-	{
 
-		$query = "select * from artists where id = :id limit 1";
-  		$row = db_query_one($query,['id'=>$id]);
+		//image
+		if (!empty($_FILES['image']['name'])) {
 
-		if($_SERVER['REQUEST_METHOD'] == "POST" && $row)
-		{
-
-			$errors = [];
-
-			//data validation
-			if(empty($_POST['name']))
-			{
-				$errors['name'] = "a name is required";
-			}else
-			if(!preg_match("/^[a-zA-Z \&\-]+$/", $_POST['name'])){
-				$errors['name'] = "a name can only have letters with no spaces";
+			$folder = "uploads/";
+			if (!file_exists($folder)) {
+				mkdir($folder, 0777, true);
+				file_put_contents($folder . "index.php", "");
 			}
 
- 			//image
-			if(!empty($_FILES['image']['name']))
-			{
+			$allowed = ['image/jpeg', 'image/png'];
+			if ($_FILES['image']['error'] == 0 && in_array($_FILES['image']['type'], $allowed)) {
 
-				$folder = "uploads/";
-				if(!file_exists($folder))
-				{
-					mkdir($folder,0777,true);
-					file_put_contents($folder."index.php", "");
-				}
+				$destination = $folder . $_FILES['image']['name'];
 
-				$allowed = ['image/jpeg','image/png'];
-				if($_FILES['image']['error'] == 0 && in_array($_FILES['image']['type'], $allowed))
-				{
-					
-					$destination = $folder. $_FILES['image']['name'];
-
-					move_uploaded_file($_FILES['image']['tmp_name'], $destination);
-					
-					//delete old file
-					if(file_exists($row['image']))
-					{
-						unlink($row['image']);
-					}
-
-				}else{
-					$errors['name'] = "image no valid. allowed types are ". implode(",", $allowed);
-				}
-
+				move_uploaded_file($_FILES['image']['tmp_name'], $destination);
+			} else {
+				$errors['name'] = "image no valid. allowed types are " . implode(",", $allowed);
 			}
-
-			if(empty($errors))
-			{
-
-				$values = [];
-				$values['name'] = trim($_POST['name']);
-				$values['bio'] = trim($_POST['bio']);
-				$values['user_id'] 	= user('id');
-				$values['id'] 		= $id;
-
-				$query = "update artists set name = :name,bio = :bio,user_id =:user_id where id = :id limit 1";
-				
-				if(!empty($destination)){
-					$query = "update artists set name = :name,bio = :bio,user_id =:user_id, image = :image where id = :id limit 1";
-					$values['image'] 	= $destination;
-				}
-
-				db_query($query,$values);
-
-				message("artist edited successfully");
-				redirect('admin/artists');
-			}
+		} else {
+			$errors['name'] = "an image is required";
 		}
-	}else
-	if($action == 'delete')
-	{
 
-		$query = "select * from artists where id = :id limit 1";
-  		$row = db_query_one($query,['id'=>$id]);
+		if (empty($errors)) {
 
-		if($_SERVER['REQUEST_METHOD'] == "POST" && $row)
-		{
+			$values = [];
+			$values['name'] = trim($_POST['name']);
+			$values['bio'] = trim($_POST['bio']);
+			$values['image'] 	= $destination;
+			$values['user_id'] 	= user('id');
 
-			$errors = [];
- 
-			if(empty($errors))
-			{
- 
-				$values = [];
-				$values['id'] 		= $id;
+			$query = "insert into artists (name,image,user_id,bio) values (:name,:image,:user_id,:bio)";
+			db_query($query, $values);
 
-				$query = "delete from artists where id = :id limit 1";
-				db_query($query,$values);
-
-				//delete image
-				if(file_exists($row['image']))
-				{
-					unlink($row['image']);
-				}
-
-				message("artist deleted successfully");
-				redirect('admin/artists');
-			}
+			message("artist created successfully");
+			redirect('admin/artists');
 		}
 	}
-	
+} else
+	if ($action == 'edit') {
+
+	$query = "select * from artists where id = :id limit 1";
+	$row = db_query_one($query, ['id' => $id]);
+
+	if ($_SERVER['REQUEST_METHOD'] == "POST" && $row) {
+
+		$errors = [];
+
+		//data validation
+		if (empty($_POST['name'])) {
+			$errors['name'] = "a name is required";
+		} else
+			if (!preg_match("/^[a-zA-Z \&\-]+$/", $_POST['name'])) {
+			$errors['name'] = "a name can only have letters with no spaces";
+		}
+
+		//image
+		if (!empty($_FILES['image']['name'])) {
+
+			$folder = "uploads/";
+			if (!file_exists($folder)) {
+				mkdir($folder, 0777, true);
+				file_put_contents($folder . "index.php", "");
+			}
+
+			$allowed = ['image/jpeg', 'image/png'];
+			if ($_FILES['image']['error'] == 0 && in_array($_FILES['image']['type'], $allowed)) {
+
+				$destination = $folder . $_FILES['image']['name'];
+
+				move_uploaded_file($_FILES['image']['tmp_name'], $destination);
+
+				//delete old file
+				if (file_exists($row['image'])) {
+					unlink($row['image']);
+				}
+			} else {
+				$errors['name'] = "image no valid. allowed types are " . implode(",", $allowed);
+			}
+		}
+
+		if (empty($errors)) {
+
+			$values = [];
+			$values['name'] = trim($_POST['name']);
+			$values['bio'] = trim($_POST['bio']);
+			$values['user_id'] 	= user('id');
+			$values['id'] 		= $id;
+
+			$query = "update artists set name = :name,bio = :bio,user_id =:user_id where id = :id limit 1";
+
+			if (!empty($destination)) {
+				$query = "update artists set name = :name,bio = :bio,user_id =:user_id, image = :image where id = :id limit 1";
+				$values['image'] 	= $destination;
+			}
+
+			db_query($query, $values);
+
+			message("artist edited successfully");
+			redirect('admin/artists');
+		}
+	}
+} else
+	if ($action == 'delete') {
+
+	$query = "select * from artists where id = :id limit 1";
+	$row = db_query_one($query, ['id' => $id]);
+
+	if ($_SERVER['REQUEST_METHOD'] == "POST" && $row) {
+
+		$errors = [];
+
+		if (empty($errors)) {
+
+			$values = [];
+			$values['id'] 		= $id;
+
+			$query = "delete from artists where id = :id limit 1";
+			db_query($query, $values);
+
+			//delete image
+			if (file_exists($row['image'])) {
+				unlink($row['image']);
+			}
+
+			message("artist deleted successfully");
+			redirect('admin/artists');
+		}
+	}
+}
+
 
 ?>
 
-<?php require page('includes/admin-header')?>
+<?php require page('includes/admin-header') ?>
 
-	<section class="admin-content" style="min-height: 200px;">
-  
-  		<?php if($action == 'add'):?>
-  			
-  			<div style="max-width: 500px;margin: auto;">
-	  			<form method="post" enctype="multipart/form-data">
+<section class="admin-content" style="min-height: 200px;">
 
-	  				<h3>Add New Artist</h3>
+	<?php if ($action == 'add'): ?>
 
-	  				<input class="form-control my-1" value="<?=set_value('name')?>" type="text" name="name" placeholder="Artist name">
-	  				<?php if(!empty($errors['name'])):?>
-	  					<small class="error"><?=$errors['name']?></small>
-	  				<?php endif;?>
- 
- 					<label>Artist Image:</label>
-	  				<input class="form-control my-1" type="file" name="image">
+		<div style="max-width: 500px;margin: auto;">
+			<form method="post" enctype="multipart/form-data">
 
-	  				<label>Artist Bio:</label>
-	  				<textarea rows="10" class="form-control my-1" name="bio"><?=set_value('bio')?></textarea>
+				<h3>Add New Artist</h3>
 
-	  				<?php if(!empty($errors['image'])):?>
-	  					<small class="error"><?=$errors['image']?></small>
-	  				<?php endif;?>
- 
-	  				<button class="btn bg-orange">Save</button>
-	  				<a href="<?=ROOT?>/admin/artists">
-	  					<button type="button" class="float-end btn">Back</button>
-	  				</a>
-	  			</form>
-	  		</div>
+				<input class="form-control my-1" value="<?= set_value('name') ?>" type="text" name="name" placeholder="Artist name">
+				<?php if (!empty($errors['name'])): ?>
+					<small class="error"><?= $errors['name'] ?></small>
+				<?php endif; ?>
 
-  		<?php elseif($action == 'edit'):?>
- 
-  			<div style="max-width: 500px;margin: auto;">
-	  			<form method="post" enctype="multipart/form-data">
-	  				<h3>Edit Artist</h3>
+				<label>Artist Image:</label>
+				<input class="form-control my-1" type="file" name="image">
 
-	  				<?php if(!empty($row)):?>
+				<label>Artist Bio:</label>
+				<textarea rows="10" class="form-control my-1" name="bio"><?= set_value('bio') ?></textarea>
 
-	  				<input class="form-control my-1" value="<?=set_value('name',$row['name'])?>" type="text" name="name" placeholder="Artistname">
-	  				<?php if(!empty($errors['name'])):?>
-	  					<small class="error"><?=$errors['name']?></small>
-	  				<?php endif;?>
+				<?php if (!empty($errors['image'])): ?>
+					<small class="error"><?= $errors['image'] ?></small>
+				<?php endif; ?>
 
-	  				<img src="<?=ROOT?>/<?=$row['image']?>" style="width:200px;height: 200px;object-fit: cover;">
+				<button class="btn bg-orange">Save</button>
+				<a href="<?= ROOT ?>/admin/artists">
+					<button type="button" class="float-end btn">Back</button>
+				</a>
+			</form>
+		</div>
 
-	  				<div>Artist Image:</div>
-	  				<input class="form-control my-1" type="file" name="image">
+	<?php elseif ($action == 'edit'): ?>
 
-	  				<label>Artist Bio:</label>
-	  				<textarea rows="10" class="form-control my-1" name="bio"><?=set_value('bio',$row['bio'])?></textarea>
+		<div style="max-width: 500px;margin: auto;">
+			<form method="post" enctype="multipart/form-data">
+				<h3>Edit Artist</h3>
 
-	  				<button class="btn bg-orange">Save</button>
-	  				<a href="<?=ROOT?>/admin/artists">
-	  					<button type="button" class="float-end btn">Back</button>
-	  				</a>
+				<?php if (!empty($row)): ?>
 
-	  				<?php else:?>
-	  					<div class="alert">That record was not found</div>
-	  					<a href="<?=ROOT?>/admin/artists">
-		  					<button type="button" class="float-end btn">Back</button>
-		  				</a>
-	  				<?php endif;?>
+					<input class="form-control my-1" value="<?= set_value('name', $row['name']) ?>" type="text" name="name" placeholder="Artistname">
+					<?php if (!empty($errors['name'])): ?>
+						<small class="error"><?= $errors['name'] ?></small>
+					<?php endif; ?>
 
-	  			</form>
-	  		</div>
+					<img src="<?= ROOT ?>/<?= $row['image'] ?>" style="width:200px;height: 200px;object-fit: cover;">
 
-  		<?php elseif($action == 'delete'):?>
+					<div>Artist Image:</div>
+					<input class="form-control my-1" type="file" name="image">
 
-  			<div style="max-width: 500px;margin: auto;">
-	  			<form method="post">
-	  				<h3>Delete Artist</h3>
+					<label>Artist Bio:</label>
+					<textarea rows="10" class="form-control my-1" name="bio"><?= set_value('bio', $row['bio']) ?></textarea>
 
-	  				<?php if(!empty($row)):?>
+					<button class="btn bg-orange">Save</button>
+					<a href="<?= ROOT ?>/admin/artists">
+						<button type="button" class="float-end btn">Back</button>
+					</a>
 
-	  				<div class="form-control my-1" ><?=set_value('name',$row['name'])?></div>
-	  				<?php if(!empty($errors['name'])):?>
-	  					<small class="error"><?=$errors['name']?></small>
-	  				<?php endif;?>
+				<?php else: ?>
+					<div class="alert">That record was not found</div>
+					<a href="<?= ROOT ?>/admin/artists">
+						<button type="button" class="float-end btn">Back</button>
+					</a>
+				<?php endif; ?>
 
-	  				<button class="btn bg-red">Delete</button>
-	  				<a href="<?=ROOT?>/admin/artists">
-	  					<button type="button" class="float-end btn">Back</button>
-	  				</a>
+			</form>
+		</div>
 
-	  				<?php else:?>
-	  					<div class="alert">That record was not found</div>
-	  					<a href="<?=ROOT?>/admin/artists">
-		  					<button type="button" class="float-end btn">Back</button>
-		  				</a>
-	  				<?php endif;?>
+	<?php elseif ($action == 'delete'): ?>
 
-	  			</form>
-	  		</div>
+		<div style="max-width: 500px;margin: auto;">
+			<form method="post">
+				<h3>Delete Artist</h3>
 
-  		<?php else:?>
+				<?php if (!empty($row)): ?>
 
-  			<?php 
-  				$query = "select * from artists order by id desc limit 20";
-  				$rows = db_query($query);
+					<div class="form-control my-1"><?= set_value('name', $row['name']) ?></div>
+					<?php if (!empty($errors['name'])): ?>
+						<small class="error"><?= $errors['name'] ?></small>
+					<?php endif; ?>
 
-  			?>
-  			<h3>Artists
-  				<a href="<?=ROOT?>/admin/artists/add">
-  					<button class="float-end btn bg-purple">Add New</button>
-  				</a>
-  			</h3>
+					<button class="btn bg-red">Delete</button>
+					<a href="<?= ROOT ?>/admin/artists">
+						<button type="button" class="float-end btn">Back</button>
+					</a>
 
-  			<table class="table">
-  				
-  				<tr>
-  					<th>ID</th>
-  					<th>Artist</th>
-  					<th>Image</th>
-  					<th>Action</th>
-   				</tr>
+				<?php else: ?>
+					<div class="alert">That record was not found</div>
+					<a href="<?= ROOT ?>/admin/artists">
+						<button type="button" class="float-end btn">Back</button>
+					</a>
+				<?php endif; ?>
 
-  				<?php if(!empty($rows)):?>
-	  				<?php foreach($rows as $row):?>
-		  				<tr>
-		  					<td><?=$row['id']?></td>
-		  					<td><?=$row['name']?></td>
-		  					<td>
-		  						<a href="<?=ROOT?>/artist/<?=$row['id']?>">
-		  						<img src="<?=ROOT?>/<?=$row['image']?>" style="width:100px;height: 100px;object-fit: cover;">
-		  						</a>
-		  					</td>
-		  					<td>
-		  						<a href="<?=ROOT?>/admin/artists/edit/<?=$row['id']?>">
-		  							<img class="bi" src="<?=ROOT?>/assets/icons/pencil-square.svg">
-		  						</a>
-		  						<a href="<?=ROOT?>/admin/artists/delete/<?=$row['id']?>">
-		  							<img class="bi" src="<?=ROOT?>/assets/icons/trash3.svg">
-		  						</a>
-		  					</td>
-		  				</tr>
-	  				<?php endforeach;?>
-  				<?php endif;?>
+			</form>
+		</div>
 
-  			</table>
-  		<?php endif;?>
+	<?php else: ?>
 
-	</section>
+		<?php
+		$query = "select * from artists order by id desc limit 20";
+		$rows = db_query($query);
 
-<?php require page('includes/admin-footer')?>
+		?>
+		<h3>Artists
+			<a href="<?= ROOT ?>/admin/artists/add">
+				<button class="float-end btn bg-purple">Add New</button>
+			</a>
+		</h3>
+
+		<table class="table">
+
+			<tr>
+				<th>ID</th>
+				<th>Artist</th>
+				<th>Image</th>
+				<th>Action</th>
+			</tr>
+
+			<?php if (!empty($rows)): ?>
+				<?php foreach ($rows as $row): ?>
+					<tr>
+						<td><?= $row['id'] ?></td>
+						<td><?= $row['name'] ?></td>
+						<td>
+							<a href="<?= ROOT ?>/artist/<?= $row['id'] ?>">
+								<img src="<?= ROOT ?>/<?= $row['image'] ?>" style="width:100px;height: 100px;object-fit: cover;">
+							</a>
+						</td>
+						<td>
+							<a href="<?= ROOT ?>/admin/artists/edit/<?= $row['id'] ?>">
+								<img class="bi" src="<?= ROOT ?>/assets/icons/pencil-square.svg">
+							</a>
+							<a href="<?= ROOT ?>/admin/artists/delete/<?= $row['id'] ?>">
+								<img class="bi" src="<?= ROOT ?>/assets/icons/trash3.svg">
+							</a>
+						</td>
+					</tr>
+				<?php endforeach; ?>
+			<?php endif; ?>
+
+		</table>
+	<?php endif; ?>
+
+</section>
+
+<?php require page('includes/admin-footer') ?>

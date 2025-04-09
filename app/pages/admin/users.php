@@ -1,6 +1,14 @@
 <?php 
-$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
-$action = isset($_GET['action']) ? $_GET['action'] : 'default';
+// Extract action and ID from URL path
+$url_path = $_SERVER['REQUEST_URI'];
+$path_parts = explode('/', trim(parse_url($url_path, PHP_URL_PATH), '/'));
+
+// Find the position of 'users' in the URL
+$users_pos = array_search('users', $path_parts);
+
+// Extract action and ID from URL
+$action = isset($path_parts[$users_pos + 1]) ? $path_parts[$users_pos + 1] : 'default';
+$id = isset($path_parts[$users_pos + 2]) ? $path_parts[$users_pos + 2] : null;
 // Điều chỉnh phần validation trong phần 'add'
 if($action == 'add')
 {
