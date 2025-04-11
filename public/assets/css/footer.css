@@ -11,6 +11,7 @@
 
 /* Footer Styles */
 footer {
+    width: 100%;
     background-color: var(--dark-color);
     color: white;
     padding: 50px 0 20px;
@@ -18,6 +19,7 @@ footer {
 }
 
 .footer-container {
+    width: 100%;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
@@ -68,21 +70,31 @@ footer {
     transform: translateX(5px);
 }
 
+/* Footer Social Section */
 .footer-social {
+    background-color: white; 
+    color: white;  /* Nền trắng cho khối chứa */
     display: flex;
     margin-top: 20px;
+    /* Bỏ thuộc tính color để không làm ảnh hưởng đến các icon bên trong */
 }
 
 .footer-social-icon {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.1);
+    color: white; 
+    background-color: white;  /* Nền trắng cho từng icon */
     margin-right: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
+}
+
+/* Đặt fill cụ thể cho các icon svg bên trong để không nhận currentColor (mà hiện tại có thể đang là trắng) */
+.footer-social-icon svg {
+    fill: var(--dark-color); /* Thay đổi thành màu bạn mong muốn, ví dụ: màu tối từ biến --dark-color */
 }
 
 .footer-social-icon:hover {
@@ -123,7 +135,8 @@ footer {
     text-align: center;
     padding-top: 30px;
     margin-top: 30px;
-    border-top: 1px solid rgba(255,255,255,0.1);
+    margin-right: 40px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     font-size: 14px;
     color: #aaa;
 }
